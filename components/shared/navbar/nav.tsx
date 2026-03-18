@@ -5,7 +5,7 @@ import Link from "next/link"
 import { Menu, X } from "lucide-react"
 import { useState } from "react"
 
-import { buttonVariants } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import {
     NavigationMenu,
     NavigationMenuItem,
@@ -13,8 +13,13 @@ import {
 } from "@/components/ui/navigation-menu"
 import { Sheet, SheetClose, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { cn } from "@/lib/utils"
+import { useAuth } from "@/lib/hooks/use-auth"
 
 export default function Nav() {
+
+    // USer
+    const { isLoggedIn, user, logout } = useAuth()
+
     const [isOpen, setIsOpen] = useState(false)
 
     return (
@@ -22,7 +27,7 @@ export default function Nav() {
             <div className="mx-auto flex w-full items-center justify-between px-4 py-4 sm:px-6">
                 <div className="flex space-x-4">
                     <Link href="/" className="flex items-center gap-2">
-                        <Image src="/logo.png" alt="QuickHire logo" width={36} height={36}  priority />
+                        <Image src="/logo.png" alt="QuickHire logo" width={36} height={36} priority />
                         <span className="font-red-hat-display text-2xl font-bold text-brand-neutrals-100">
                             QuickHire
                         </span>
@@ -45,16 +50,35 @@ export default function Nav() {
                 </div>
 
                 <div className="hidden items-center md:flex">
-                    <Link href="/login" className={cn(buttonVariants({ variant: "ghost" }), " text-primary font-bold")}>
-                        Login
-                    </Link>
-                    <div className="mx-3 h-8 w-px bg-brand-neutrals-20" aria-hidden="true" />
-                    <Link
-                        href="/register"
-                        className={cn(buttonVariants({ variant: "default" }), "h-12 rounded-none    ")}
-                    >
-                        Sign Up
-                    </Link>
+                    {!isLoggedIn ? (
+                        <>
+                            <Link href="/login" className={cn(buttonVariants({ variant: "ghost" }), " text-primary font-bold")}>
+                                Login
+                            </Link>
+                            <div className="mx-3 h-8 w-px bg-brand-neutrals-20" aria-hidden="true" />
+                            <Link
+                                href="/register"
+                                className={cn(buttonVariants({ variant: "default" }), "h-12 rounded-none    ")}
+                            >
+                                Sign Up
+                            </Link>
+                        </>
+                    ) : (
+                        <div className="flex items-center gap-4">
+                            <Link
+                                href="/dashboard"
+                                className={cn(buttonVariants({ variant: "default" }), "h-12 rounded-none    ")}
+                            >
+                                Dashboard
+                            </Link>
+                            <Button
+                                onClick={logout}
+                                variant="destructive"
+                            >
+                                Logout
+                            </Button>
+                        </div>
+                    )}
                 </div>
 
                 <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -105,27 +129,42 @@ export default function Nav() {
                             </Link>
 
                             <div className="mt-3 flex items-center gap-2">
-                                <div className="w-full ">
-                                    <Link
-                                        href="/login"
-                                        className={cn(buttonVariants({ variant: "ghost" }), "  w-full font-bold")}
-                                        onClick={() => setIsOpen(false)}
-                                    >
-                                        Login
-                                    </Link>
-                                </div>
-                                <div className="mx-3 h-8 w-px bg-brand-neutrals-20" aria-hidden="true" />
+                                {
+                                    !isLoggedIn ? <> <div className="w-full ">
+                                        <Link
+                                            href="/login"
+                                            className={cn(buttonVariants({ variant: "ghost" }), "  w-full font-bold")}
+                                            onClick={() => setIsOpen(false)}
+                                        >
+                                            Login
+                                        </Link>
+                                    </div>
+                                        <div className="mx-3 h-8 w-px bg-brand-neutrals-20" aria-hidden="true" />
 
-                                <div className='w-full'>
+                                        <div className='w-full'>
 
-                                    <Link
-                                        href="/register"
-                                        className={cn(buttonVariants({ variant: "default" }), " f-wull")}
-                                        onClick={() => setIsOpen(false)}
-                                    >
-                                        Sign Up
-                                    </Link>
-                                </div>
+                                            <Link
+                                                href="/register"
+                                                className={cn(buttonVariants({ variant: "default" }), " f-wull")}
+                                                onClick={() => setIsOpen(false)}
+                                            >
+                                                Sign Up
+                                            </Link>
+                                        </div></> : <div className="flex items-center gap-4">
+                                        <Link
+                                            href="/dashboard"
+                                            className={cn(buttonVariants({ variant: "default" }), "h-12 rounded-none    ")}
+                                        >
+                                            Dashboard
+                                        </Link>
+                                        <Button
+                                            onClick={logout}
+                                            variant="destructive"
+                                        >
+                                            Logout
+                                        </Button>
+                                    </div>
+                                }
                             </div>
                         </nav>
                     </SheetContent>

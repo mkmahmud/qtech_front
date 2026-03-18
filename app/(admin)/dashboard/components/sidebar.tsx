@@ -1,4 +1,6 @@
-import React, { useState } from 'react'
+"use client"
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/lib/hooks/use-auth";
 import {
     LayoutDashboard, Briefcase, FileText, Bookmark,
     Users, Plus, Settings, LogOut, Bell, ChevronDown, Menu, X
@@ -6,7 +8,7 @@ import {
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 // Mock: swap with real auth context
-const MOCK_USER = { name: "Sarah Johnson", email: "sarah@example.com", role:  "admin", avatar: "SJ" };
+const MOCK_USER = { name: "Sarah Johnson", email: "sarah@example.com", role: "admin", avatar: "SJ" };
 // const MOCK_USER = { name: "Admin User", email: "admin@quickhire.com", role: "admin" as "user" | "admin", avatar: "AU" };
 
 const USER_NAV = [
@@ -32,7 +34,7 @@ export default function Sidebar({
     setSidebarOpen: (value: boolean) => void;
 }) {
     const pathname = usePathname();
-    const user = MOCK_USER;
+    const { user, logout, isLoading } = useAuth();
     const nav = user.role === "admin" ? ADMIN_NAV : USER_NAV;
 
     return (
@@ -93,10 +95,10 @@ export default function Sidebar({
 
                 {/* Sign out */}
                 <div className="p-4 border-t border-brand-neutrals-20">
-                    <button className="flex items-center gap-3 px-3 py-2.5 font-ui text-sm font-medium text-brand-neutrals-60 hover:text-brand-red transition-colors w-full">
-                        <LogOut className="size-4" />
-                        Sign Out
-                    </button>
+                    <Button variant="ghost" onClick={logout} className="text-destructive hover:bg-destructive/10">
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Logout
+                    </Button>
                 </div>
             </aside>
         </>

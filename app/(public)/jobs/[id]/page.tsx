@@ -1,251 +1,130 @@
+"use client";
+
+import { use } from "react"; // Add this
 import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   MapPin, Clock, Briefcase, DollarSign, Users, ArrowLeft,
-  Globe, Linkedin, Twitter, Share2, Bookmark, CheckCircle2
+  Share2, Bookmark, Loader2
 } from "lucide-react";
+import { formatDistanceToNow, format } from "date-fns";
+import { jobsApi } from "@/lib/api/features/jobs";
 
- const JOB = {
-  id: "1",
-  title: "Senior Product Designer",
-  company: "Stripe",
-  location: "Remote · US",
-  category: "Design",
-  type: "Full Time",
-  salary: "$120k–$160k",
-  posted: "2 days ago",
-  applicants: 48,
-  deadline: "June 30, 2025",
-  logo: "S",
-  logoColor: "bg-brand-primary/15 text-brand-primary",
-  website: "stripe.com",
-  companySize: "1,000–5,000",
-  founded: "2010",
-  about: "Stripe is a technology company that builds economic infrastructure for the internet. Businesses of every size—from new startups to public companies—use our software to accept payments and manage their businesses online.",
-  description: `We're looking for a Senior Product Designer to shape the future of financial infrastructure. You'll work closely with PMs, engineers, and fellow designers to craft experiences that help millions of businesses grow and thrive.
+export default function JobDetailPage({ params }: { params: Promise<{ id: string }> | { id: string } }) {
+  // 1. Unwrap the params safely
+  const resolvedParams = params instanceof Promise ? use(params) : params;
+  const jobId = parseInt(resolvedParams.id);
 
-This is a rare opportunity to work on products that are used by some of the world's most innovative companies—from early-stage startups to Fortune 500 enterprises.`,
-  responsibilities: [
-    "Lead end-to-end design of complex product features from discovery to launch",
-    "Partner with product managers and engineers to define scope and requirements",
-    "Conduct user research and usability testing to validate design decisions",
-    "Establish and maintain design system components and documentation",
-    "Mentor junior designers and contribute to design culture",
-    "Communicate design rationale to executive stakeholders",
-  ],
-  requirements: [
-    "5+ years of product design experience at a tech company",
-    "Exceptional Figma and prototyping skills",
-    "Strong portfolio demonstrating complex B2B or fintech product work",
-    "Experience with design systems at scale",
-    "Excellent written and verbal communication",
-    "Ability to work independently and drive projects autonomously",
-  ],
-  niceToHave: [
-    "Experience with developer tools or financial products",
-    "Background in motion design or interaction design",
-    "Familiarity with accessibility standards (WCAG 2.1)",
-  ],
-  benefits: [
-    "Competitive salary + equity",
-    "Remote-first culture",
-    "Comprehensive health, dental & vision",
-    "Unlimited PTO",
-    "$2,000 home office stipend",
-    "Annual learning & development budget",
-  ],
-  tags: ["Figma", "Design Systems", "UX Research", "Prototyping", "B2B"],
-};
+  // 2. Fetch Job Data with a safety check on the ID
+  const { data: response, isLoading, isError } = useQuery({
+    queryKey: ["job", jobId],
+    queryFn: () => jobsApi.getById(jobId),
+    enabled: !isNaN(jobId), // Only run the query if jobId is a valid number
+  });
 
-const RELATED = [
-  { id: "5", title: "Brand Designer", company: "Linear", location: "Remote · Europe", type: "Contract", logo: "L", logoColor: "bg-brand-red/15 text-brand-red" },
-  { id: "3", title: "Growth Marketing Manager", company: "Notion", location: "New York, NY", type: "Full Time", logo: "N", logoColor: "bg-brand-green/15 text-brand-green" },
-];
+  const job = response?.data;
 
-export default function JobDetailPage({ params }: { params: { id: string } }) {
+  // 3. Handle Invalid ID or Loading
+  if (isNaN(jobId)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-brand-red font-ui">Invalid Job ID provided.</p>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-[70vh] flex flex-col items-center justify-center gap-4 bg-brand-light-gray">
+        <Loader2 className="size-10 animate-spin text-brand-primary" />
+        <p className="font-ui text-brand-neutrals-60">Loading job details...</p>
+      </div>
+    );
+  }
+
+  if (isError || !job) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
+        <h2 className="font-heading font-bold text-2xl text-brand-neutrals-100">Job not found</h2>
+        <Link href="/jobs" className="text-brand-primary underline font-ui">Return to job board</Link>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-brand-light-gray">
-      
-
       <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Back */}
-        <Link href="/jobs" className="inline-flex items-center gap-2 font-ui text-sm text-brand-neutrals-60 hover:text-brand-primary transition-colors mb-6">
+        <Link href="/jobs" className="inline-flex items-center gap-2 font-ui text-sm text-brand-neutrals-60 hover:text-brand-primary mb-6 transition-colors">
           <ArrowLeft className="size-4" /> Back to jobs
         </Link>
 
-        <div className="flex gap-8 items-start">
-          {/* Main Content */}
-          <div className="flex-1 min-w-0">
-
-            {/* Job Hero Card */}
+        <div className="flex flex-col lg:flex-row gap-8 items-start">
+          <div className="flex-1 min-w-0 w-full">
             <div className="bg-white border border-brand-neutrals-20 p-8 mb-6">
               <div className="flex gap-5 items-start">
-                <div className={`size-16 shrink-0 grid place-items-center font-heading font-bold text-2xl ${JOB.logoColor}`}>
-                  {JOB.logo}
+                <div className="size-16 shrink-0 grid place-items-center font-heading font-bold text-2xl bg-brand-primary/10 text-brand-primary">
+                  {job.company.charAt(0)}
                 </div>
                 <div className="flex-1">
                   <div className="flex items-start justify-between flex-wrap gap-3">
                     <div>
-                      <h1 className="font-heading font-bold text-2xl text-brand-neutrals-100 leading-tight">
-                        {JOB.title}
-                      </h1>
-                      <p className="font-ui text-brand-neutrals-80 mt-1">{JOB.company}</p>
+                      <h1 className="font-heading font-bold text-2xl text-brand-neutrals-100 leading-tight">{job.title}</h1>
+                      <p className="font-ui text-brand-neutrals-80 mt-1">{job.company}</p>
                     </div>
                     <div className="flex gap-2">
-                      <button className="size-9 border border-brand-neutrals-20 grid place-items-center hover:border-brand-primary hover:text-brand-primary transition-colors">
-                        <Bookmark className="size-4" />
-                      </button>
-                      <button className="size-9 border border-brand-neutrals-20 grid place-items-center hover:border-brand-primary hover:text-brand-primary transition-colors">
-                        <Share2 className="size-4" />
-                      </button>
+                      <button className="size-9 border border-brand-neutrals-20 grid place-items-center hover:border-brand-primary transition-colors"><Bookmark className="size-4" /></button>
+                      <button className="size-9 border border-brand-neutrals-20 grid place-items-center hover:border-brand-primary transition-colors"><Share2 className="size-4" /></button>
                     </div>
                   </div>
 
-                  {/* Meta row */}
                   <div className="flex flex-wrap gap-4 mt-4 text-sm font-ui text-brand-neutrals-60">
-                    <span className="flex items-center gap-1.5"><MapPin className="size-4 text-brand-neutrals-40" />{JOB.location}</span>
-                    <span className="flex items-center gap-1.5"><DollarSign className="size-4 text-brand-neutrals-40" />{JOB.salary}/yr</span>
-                    <span className="flex items-center gap-1.5"><Clock className="size-4 text-brand-neutrals-40" />Posted {JOB.posted}</span>
-                    <span className="flex items-center gap-1.5"><Users className="size-4 text-brand-neutrals-40" />{JOB.applicants} applicants</span>
+                    <span className="flex items-center gap-1.5"><MapPin className="size-4" />{job.location}</span>
+                    <span className="flex items-center gap-1.5"><Clock className="size-4" />{formatDistanceToNow(new Date(job.created_at), { addSuffix: true })}</span>
                   </div>
 
-                  {/* Badges */}
                   <div className="flex gap-2 flex-wrap mt-4">
-                    <Badge variant="green">{JOB.type}</Badge>
-                    <Badge variant="default">{JOB.category}</Badge>
-                   
+                    <Badge variant="green">Full Time</Badge>
+                    <Badge variant="default" className="capitalize">{job.category}</Badge>
                   </div>
                 </div>
               </div>
 
-              {/* Apply CTA */}
               <div className="flex items-center gap-4 mt-6 pt-6 border-t border-brand-neutrals-20">
-                <Link href={`/jobs/${JOB.id}/apply`} className="flex-1 sm:flex-none">
-                  <Button className="w-full sm:w-auto px-8 py-2.5 text-base">Apply Now</Button>
+                <Link href={`/jobs/${job.id}/apply`}>
+                  <Button className="px-8 py-2.5 text-base">Apply Now</Button>
                 </Link>
-                <p className="font-ui text-sm text-brand-neutrals-60">
-                  Deadline: <span className="text-brand-red font-medium">{JOB.deadline}</span>
-                </p>
               </div>
             </div>
 
-            {/* Description */}
-            <div className="bg-white border border-brand-neutrals-20 p-8 mb-6">
-              <h2 className="font-heading font-bold text-xl text-brand-neutrals-100 mb-4">About the Role</h2>
-              <div className="font-ui text-sm text-brand-neutrals-80 leading-relaxed whitespace-pre-line mb-6">
-                {JOB.description}
-              </div>
-
-              <h3 className="font-heading font-bold text-lg text-brand-neutrals-100 mb-3">Responsibilities</h3>
-              <ul className="space-y-2 mb-6">
-                {JOB.responsibilities.map((r) => (
-                  <li key={r} className="flex items-start gap-2.5 font-ui text-sm text-brand-neutrals-80">
-                    <CheckCircle2 className="size-4 text-brand-green shrink-0 mt-0.5" />
-                    {r}
-                  </li>
-                ))}
-              </ul>
-
-              <h3 className="font-heading font-bold text-lg text-brand-neutrals-100 mb-3">Requirements</h3>
-              <ul className="space-y-2 mb-6">
-                {JOB.requirements.map((r) => (
-                  <li key={r} className="flex items-start gap-2.5 font-ui text-sm text-brand-neutrals-80">
-                    <CheckCircle2 className="size-4 text-brand-primary shrink-0 mt-0.5" />
-                    {r}
-                  </li>
-                ))}
-              </ul>
-
-              <h3 className="font-heading font-bold text-lg text-brand-neutrals-100 mb-3">Nice to Have</h3>
-              <ul className="space-y-2 mb-6">
-                {JOB.niceToHave.map((r) => (
-                  <li key={r} className="flex items-start gap-2.5 font-ui text-sm text-brand-neutrals-60">
-                    <CheckCircle2 className="size-4 text-brand-neutrals-40 shrink-0 mt-0.5" />
-                    {r}
-                  </li>
-                ))}
-              </ul>
-
-              <h3 className="font-heading font-bold text-lg text-brand-neutrals-100 mb-3">Benefits & Perks</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {JOB.benefits.map((b) => (
-                  <div key={b} className="flex items-center gap-2.5 bg-brand-light-gray px-3 py-2.5 font-ui text-sm text-brand-neutrals-80">
-                    <CheckCircle2 className="size-4 text-brand-yellow shrink-0" />
-                    {b}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Bottom CTA */}
-            <div className="bg-brand-primary p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div>
-                <p className="font-heading font-bold text-white text-lg">Interested in this role?</p>
-                <p className="font-ui text-sm text-white/70 mt-0.5">Join {JOB.applicants} others who have already applied.</p>
-              </div>
-              <Link href={`/jobs/${JOB.id}/apply`}>
-                <Button variant="secondary" className="px-8">Apply Now →</Button>
-              </Link>
+            <div className="bg-white border border-brand-neutrals-20 p-8">
+              <h2 className="font-heading font-bold text-xl text-brand-neutrals-100 mb-4">Job Description</h2>
+              <div
+                className="prose prose-sm max-w-none font-ui text-brand-neutrals-80 leading-relaxed"
+                // @ts-ignore
+                dangerouslySetInnerHTML={{ __html: job.description_html || job.description }}
+              />
             </div>
           </div>
 
-          {/* Sidebar */}
-          <aside className="hidden lg:block w-72 shrink-0 space-y-4">
-            {/* Company Info */}
-            <div className="bg-white border border-brand-neutrals-20 p-5">
-              <h3 className="font-heading font-bold text-base text-brand-neutrals-100 mb-4">About {JOB.company}</h3>
-              <p className="font-ui text-sm text-brand-neutrals-60 leading-relaxed mb-4">{JOB.about}</p>
-              <div className="space-y-2.5">
-                {[
-                  { label: "Website", value: JOB.website, icon: Globe },
-                  { label: "Company size", value: JOB.companySize + " employees", icon: Users },
-                  { label: "Founded", value: JOB.founded, icon: Briefcase },
-                  { label: "Industry", value: JOB.category, icon: Briefcase },
-                ].map(({ label, value, icon: Icon }) => (
-                  <div key={label} className="flex items-center gap-2.5">
-                    <Icon className="size-4 text-brand-neutrals-40 shrink-0" />
-                    <div>
-                      <p className="font-ui text-xs text-brand-neutrals-40">{label}</p>
-                      <p className="font-ui text-sm text-brand-neutrals-80 font-medium">{value}</p>
-                    </div>
-                  </div>
-                ))}
+          <aside className="w-full lg:w-72 shrink-0">
+            <div className="bg-white border border-brand-neutrals-20 p-5 sticky top-24">
+              <h3 className="font-heading font-bold text-base text-brand-neutrals-100 mb-4">Quick Overview</h3>
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <Briefcase className="size-4 text-brand-neutrals-40" />
+                  <p className="font-ui text-sm text-brand-neutrals-80 capitalize">{job.category}</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Users className="size-4 text-brand-neutrals-40" />
+                  <p className="font-ui text-sm text-brand-neutrals-80">{job.applications_count} Applied</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Clock className="size-4 text-brand-neutrals-40" />
+                  <p className="font-ui text-sm text-brand-neutrals-80">{format(new Date(job.created_at), "MMM d, yyyy")}</p>
+                </div>
               </div>
-              <div className="flex gap-2 mt-4 pt-4 border-t border-brand-neutrals-20">
-                <button className="size-8 border border-brand-neutrals-20 grid place-items-center hover:border-brand-primary transition-colors">
-                  <Globe className="size-3.5 text-brand-neutrals-60" />
-                </button>
-                <button className="size-8 border border-brand-neutrals-20 grid place-items-center hover:border-brand-primary transition-colors">
-                  <Linkedin className="size-3.5 text-brand-neutrals-60" />
-                </button>
-                <button className="size-8 border border-brand-neutrals-20 grid place-items-center hover:border-brand-primary transition-colors">
-                  <Twitter className="size-3.5 text-brand-neutrals-60" />
-                </button>
-              </div>
-            </div>
-
-            {/* Similar Jobs */}
-            <div className="bg-white border border-brand-neutrals-20 p-5">
-              <h3 className="font-heading font-bold text-base text-brand-neutrals-100 mb-4">Similar Jobs</h3>
-              <div className="space-y-3">
-                {RELATED.map((j) => (
-                  <Link key={j.id} href={`/jobs/${j.id}`} className="flex gap-3 items-center group">
-                    <div className={`size-10 shrink-0 grid place-items-center font-heading font-bold text-base ${j.logoColor}`}>
-                      {j.logo}
-                    </div>
-                    <div>
-                      <p className="font-ui text-sm font-semibold text-brand-neutrals-100 group-hover:text-brand-primary transition-colors leading-tight">
-                        {j.title}
-                      </p>
-                      <p className="font-ui text-xs text-brand-neutrals-60">{j.company} · {j.type}</p>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-              <Link href="/jobs" className="mt-4 pt-4 border-t border-brand-neutrals-20 flex font-ui text-sm text-brand-primary font-medium hover:underline">
-                View all jobs →
-              </Link>
             </div>
           </aside>
         </div>

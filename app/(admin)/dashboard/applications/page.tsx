@@ -2,193 +2,203 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Search, MapPin, DollarSign, Clock, Calendar,
-  ExternalLink, Trash2, ChevronDown
+  ExternalLink, Trash2, ChevronDown, Loader2, CheckCircle2
 } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { format } from "date-fns";
+import { toast } from "sonner";
+import { applicationApi } from "@/lib/api/features/application";
+import { Input } from "@/components/ui/input";
 
+//  Status  
 const STATUS_CONFIG: Record<string, { label: string; variant: "default" | "green" | "yellow" | "red"; desc: string }> = {
-  applied:       { label: "Applied",       variant: "default", desc: "Application submitted, awaiting review." },
-  under_review:  { label: "Under Review",  variant: "yellow",  desc: "Hiring team is reviewing your profile." },
-  shortlisted:   { label: "Shortlisted",   variant: "green",   desc: "You've been shortlisted! Expect a call soon." },
-  rejected:      { label: "Rejected",      variant: "red",     desc: "This position has been filled." },
+  submitted: { label: "Applied", variant: "default", desc: "Application submitted, awaiting review." },
+  pending: { label: "Under Review", variant: "yellow", desc: "Hiring team is reviewing your profile." },
+  selected: { label: "Shortlisted", variant: "green", desc: "You've been shortlisted! Expect a call soon." },
+  rejected: { label: "Rejected", variant: "red", desc: "This position has been filled." },
 };
-
-const APPLICATIONS = [
-  {
-    id: "1", jobId: "1", jobTitle: "Senior Product Designer", company: "Stripe",
-    location: "Remote · US", salary: "$120k–$160k", type: "Full Time",
-    category: "Design", status: "shortlisted",
-    appliedAt: "Mar 14, 2025", deadline: "Jun 30, 2025",
-    logo: "S", logoColor: "bg-brand-primary/15 text-brand-primary",
-    tags: ["Figma", "Design Systems"],
-  },
-  {
-    id: "2", jobId: "2", jobTitle: "Frontend Engineer (React)", company: "Vercel",
-    location: "San Francisco, CA", salary: "$140k–$190k", type: "Full Time",
-    category: "Engineering", status: "under_review",
-    appliedAt: "Mar 11, 2025", deadline: "Jul 15, 2025",
-    logo: "V", logoColor: "bg-brand-black/10 text-brand-black",
-    tags: ["React", "TypeScript"],
-  },
-  {
-    id: "3", jobId: "5", jobTitle: "Brand Designer", company: "Linear",
-    location: "Remote · Europe", salary: "$80k–$110k", type: "Contract",
-    category: "Design", status: "applied",
-    appliedAt: "Mar 7, 2025", deadline: "May 1, 2025",
-    logo: "L", logoColor: "bg-brand-red/15 text-brand-red",
-    tags: ["Branding", "Illustration"],
-  },
-  {
-    id: "4", jobId: "3", jobTitle: "Growth Marketing Manager", company: "Notion",
-    location: "New York, NY", salary: "$90k–$130k", type: "Full Time",
-    category: "Marketing", status: "rejected",
-    appliedAt: "Feb 28, 2025", deadline: "Apr 15, 2025",
-    logo: "N", logoColor: "bg-brand-green/15 text-brand-green",
-    tags: ["SEO", "Analytics"],
-  },
-  {
-    id: "5", jobId: "4", jobTitle: "Backend Engineer – Python", company: "Anthropic",
-    location: "Remote · Worldwide", salary: "$160k–$220k", type: "Full Time",
-    category: "Engineering", status: "under_review",
-    appliedAt: "Feb 20, 2025", deadline: "Jun 1, 2025",
-    logo: "A", logoColor: "bg-brand-yellow/15 text-brand-yellow",
-    tags: ["Python", "AWS"],
-  },
-];
 
 const FILTERS = ["All", "Applied", "Under Review", "Shortlisted", "Rejected"];
 const statusKeyMap: Record<string, string> = {
   "All": "all",
-  "Applied": "applied",
-  "Under Review": "under_review",
-  "Shortlisted": "shortlisted",
+  "Applied": "submitted",
+  "Under Review": "pending",
+  "Shortlisted": "selected",
   "Rejected": "rejected",
 };
 
 export default function MyApplicationsPage() {
+  const searchParams = useSearchParams();
+  const queryClient = useQueryClient();
+  const jobId = searchParams.get("job");
+
   const [filter, setFilter] = useState("All");
   const [search, setSearch] = useState("");
-  const [expanded, setExpanded] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<number | null>(null);
+
+  //    Fetch Data  
+  const { data: response, isLoading, isError } = useQuery({
+    queryKey: jobId ? ["applications", "job", jobId] : ["applications", "me"],
+    queryFn: () => jobId ? applicationApi.getJobApplications(Number(jobId)) : applicationApi.getMyApplications(),
+  });
+
+  //   Admin Updates Status
+  const updateStatusMutation = useMutation({
+    mutationFn: ({ id, status }: { id: number; status: string }) =>
+      // @ts-ignore
+      applicationApi.updateStatus(id, status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["applications"] });
+      toast.success("Application status updated successfully");
+    },
+    onError: () => toast.error("Failed to update status"),
+  });
+
+  //  Withdraw Application (Seeker Only)
+  const withdrawMutation = useMutation({
+    mutationFn: (id: number) => applicationApi.withdraw(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["applications"] });
+      toast.success("Application withdrawn");
+    },
+  });
+
+  const APPLICATIONS = response?.data || [];
 
   const filtered = APPLICATIONS.filter((a) => {
     const matchStatus = filter === "All" || a.status === statusKeyMap[filter];
-    const matchSearch =
-      !search ||
-      a.jobTitle.toLowerCase().includes(search.toLowerCase()) ||
-      a.company.toLowerCase().includes(search.toLowerCase());
+    const matchSearch = !search ||
+      a.name.toLowerCase().includes(search.toLowerCase()) ||
+      a.job?.title.toLowerCase().includes(search.toLowerCase());
     return matchStatus && matchSearch;
   });
 
   const counts = {
     all: APPLICATIONS.length,
-    applied: APPLICATIONS.filter((a) => a.status === "applied").length,
-    under_review: APPLICATIONS.filter((a) => a.status === "under_review").length,
-    shortlisted: APPLICATIONS.filter((a) => a.status === "shortlisted").length,
+    applied: APPLICATIONS.filter((a) => a.status === "submitted").length,
+    under_review: APPLICATIONS.filter((a) => a.status === "pending").length,
+    shortlisted: APPLICATIONS.filter((a) => a.status === "selected").length,
     rejected: APPLICATIONS.filter((a) => a.status === "rejected").length,
   };
+
+  if (isLoading) {
+    return (
+      <div className="h-[60vh] flex flex-col items-center justify-center gap-3">
+        <Loader2 className="size-8 animate-spin text-brand-primary" />
+        <p className="text-sm font-ui text-brand-neutrals-60 font-medium italic">Loading applications...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="font-heading font-bold text-3xl text-brand-neutrals-100">My Applications</h1>
-        <p className="font-ui text-sm text-brand-neutrals-60 mt-1">
-          You have applied to <span className="font-semibold text-brand-neutrals-100">{APPLICATIONS.length}</span> jobs
-        </p>
+      <div className="flex justify-between items-end">
+        <div>
+          <h1 className="font-heading font-bold text-3xl text-brand-neutrals-100">
+            {jobId ? "Job Applicants" : "My Applications"}
+          </h1>
+          <p className="font-ui text-sm text-brand-neutrals-60 mt-1">
+            Total entries: <span className="font-semibold text-brand-neutrals-100">{APPLICATIONS.length}</span>
+          </p>
+        </div>
+        {jobId && (
+          <Link href="/dashboard/jobs">
+            <Button variant="ghost" size="sm" className="text-brand-neutrals-60 font-ui underline">Back to Job List</Button>
+          </Link>
+        )}
       </div>
 
-      {/* Search */}
-      <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-brand-neutrals-40" />
-        <input
-          placeholder="Search applications…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full h-10 pl-10 pr-4 border border-brand-neutrals-20 bg-white font-ui text-sm outline-none focus:border-brand-primary transition-colors"
-        />
-      </div>
+      {/* Search & Filter Bar */}
+      <div className="flex flex-col md:flex-row gap-4">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-brand-neutrals-40" />
+          <Input
+            placeholder="Search by name or job title…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full h-10 pl-10 pr-4 border-b border-brand-neutrals-20 "
+          />
+        </div>
 
-      {/* Filter Tabs */}
-      <div className="flex gap-2 flex-wrap">
-        {FILTERS.map((f) => {
-          const key = statusKeyMap[f] as keyof typeof counts;
-          const count = counts[key] ?? counts.all;
-          return (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`flex items-center gap-1.5 px-4 py-1.5 font-ui text-sm font-medium border transition-colors ${
-                filter === f
+        <div className="flex gap-2 flex-wrap">
+          {FILTERS.map((f) => {
+            const key = statusKeyMap[f] as keyof typeof counts;
+            const count = counts[key] ?? counts.all;
+            return (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                className={`flex items-center gap-1.5 px-4 py-1.5 font-ui text-sm font-medium border transition-colors ${filter === f
                   ? "bg-brand-primary text-white border-brand-primary"
                   : "bg-white border-brand-neutrals-20 text-brand-neutrals-80 hover:border-brand-primary hover:text-brand-primary"
-              }`}
-            >
-              {f}
-              <span className={`text-xs px-1.5 py-0.5 font-bold ${filter === f ? "bg-white/20 text-white" : "bg-brand-neutrals-20 text-brand-neutrals-60"}`}>
-                {count}
-              </span>
-            </button>
-          );
-        })}
+                  }`}
+              >
+                {f}
+                <span className={`text-[10px] px-1.5 py-0.5 font-bold ${filter === f ? "bg-white/20 text-white" : "bg-brand-neutrals-20 text-brand-neutrals-60"}`}>
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      {/* Application Cards */}
+      {/* Main List */}
       {filtered.length === 0 ? (
-        <div className="bg-white border border-brand-neutrals-20 py-16 text-center">
-          <p className="font-heading font-bold text-lg text-brand-neutrals-60">No applications found</p>
-          <p className="font-ui text-sm text-brand-neutrals-40 mt-1">Try a different filter or search term.</p>
-          <Link href="/jobs" className="inline-block mt-4">
-            <Button>Browse Jobs</Button>
-          </Link>
+        <div className="bg-white border border-brand-neutrals-20 py-20 text-center">
+          <p className="font-heading font-bold text-lg text-brand-neutrals-60">No records found</p>
+          <p className="font-ui text-sm text-brand-neutrals-40 mt-1">Adjust your filters or search terms.</p>
         </div>
       ) : (
         <div className="space-y-3">
           {filtered.map((app) => {
-            const s = STATUS_CONFIG[app.status];
+            const s = STATUS_CONFIG[app.status] || STATUS_CONFIG.submitted;
             const isExpanded = expanded === app.id;
+
             return (
               <div key={app.id} className="bg-white border border-brand-neutrals-20 hover:border-brand-primary/40 transition-colors">
-                {/* Main row */}
                 <div className="flex items-start gap-4 p-5">
-                  <div className={`size-11 shrink-0 grid place-items-center font-heading font-bold text-lg ${app.logoColor}`}>
-                    {app.logo}
+                  <div className={`size-11 shrink-0 grid place-items-center font-heading font-bold text-lg bg-brand-primary/10 text-brand-primary`}>
+                    {app.name.charAt(0)}
                   </div>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-3 flex-wrap">
                       <div>
-                        <h3 className="font-heading font-bold text-base text-brand-neutrals-100">{app.jobTitle}</h3>
-                        <p className="font-ui text-sm text-brand-neutrals-60">{app.company}</p>
+                        <h3 className="font-heading font-bold text-base text-brand-neutrals-100">{app.name}</h3>
+                        <p className="font-ui text-sm text-brand-neutrals-60">{app.job?.title || "Project Application"}</p>
                       </div>
                       <Badge variant={s.variant}>{s.label}</Badge>
                     </div>
 
                     <div className="flex flex-wrap gap-4 mt-2 text-xs font-ui text-brand-neutrals-60">
-                      <span className="flex items-center gap-1"><MapPin className="size-3.5" />{app.location}</span>
-                      <span className="flex items-center gap-1"><DollarSign className="size-3.5" />{app.salary}</span>
-                      <span className="flex items-center gap-1"><Clock className="size-3.5" />Applied {app.appliedAt}</span>
-                    </div>
-
-                    <div className="flex gap-2 flex-wrap mt-2.5">
-                      {app.tags.map((t) => (
-                        <span key={t} className="font-ui text-xs border border-brand-neutrals-20 px-2 py-0.5 text-brand-neutrals-60">{t}</span>
-                      ))}
+                      <span className="flex items-center gap-1"><Clock className="size-3.5" />Applied {format(new Date(app.created_at), "MMM d, yyyy")}</span>
+                      {app.email && <span className="underline">{app.email}</span>}
                     </div>
                   </div>
 
-                  {/* Actions */}
+                  {/* Top Level Actions */}
                   <div className="flex items-center gap-2 shrink-0">
-                    <Link href={`/jobs/${app.jobId}`}>
+                    <a href={app.resume_link} target="_blank" rel="noopener noreferrer">
                       <button className="size-8 border border-brand-neutrals-20 grid place-items-center hover:border-brand-primary hover:text-brand-primary transition-colors text-brand-neutrals-60">
                         <ExternalLink className="size-3.5" />
                       </button>
-                    </Link>
-                    <button className="size-8 border border-brand-neutrals-20 grid place-items-center hover:border-brand-red hover:text-brand-red transition-colors text-brand-neutrals-60">
-                      <Trash2 className="size-3.5" />
-                    </button>
+                    </a>
+                    {!jobId && (
+                      <button
+                        onClick={() => withdrawMutation.mutate(app.id)}
+                        disabled={withdrawMutation.isPending}
+                        className="size-8 border border-brand-neutrals-20 grid place-items-center hover:border-brand-red hover:text-brand-red transition-colors text-brand-neutrals-60"
+                      >
+                        <Trash2 className="size-3.5" />
+                      </button>
+                    )}
                     <button
                       onClick={() => setExpanded(isExpanded ? null : app.id)}
                       className="size-8 border border-brand-neutrals-20 grid place-items-center hover:border-brand-primary transition-colors text-brand-neutrals-60"
@@ -198,45 +208,49 @@ export default function MyApplicationsPage() {
                   </div>
                 </div>
 
-                {/* Expanded: Status Timeline */}
+                {/* Expanded Section: Details & Admin Controls */}
                 {isExpanded && (
-                  <div className="border-t border-brand-neutrals-20 px-5 py-4 bg-brand-light-gray">
-                    <div className="grid sm:grid-cols-2 gap-4">
-                      {/* Status info */}
+                  <div className="border-t border-brand-neutrals-20 px-5 py-5 bg-brand-light-gray/50">
+                    <div className="grid md:grid-cols-2 gap-8">
+                      {/* Left Side: Note */}
                       <div>
-                        <p className="font-ui text-xs font-semibold text-brand-neutrals-60 uppercase tracking-wider mb-2">Status Update</p>
-                        <div className={`flex items-start gap-2 p-3 border-l-4 ${
-                          app.status === "shortlisted" ? "border-brand-green bg-brand-green/5" :
-                          app.status === "under_review" ? "border-brand-yellow bg-brand-yellow/5" :
-                          app.status === "rejected" ? "border-brand-red bg-brand-red/5" :
-                          "border-brand-primary bg-brand-primary/5"
-                        }`}>
-                          <p className="font-ui text-sm text-brand-neutrals-80">{s.desc}</p>
+                        <p className="font-ui text-[11px] font-bold text-brand-neutrals-60 uppercase tracking-widest mb-3">Cover Message</p>
+                        <div className="p-4 bg-white border border-brand-neutrals-20 text-sm font-ui text-brand-neutrals-80 leading-relaxed italic">
+                          "{app.cover_note || "No message provided by candidate."}"
                         </div>
                       </div>
-                      {/* Timeline dots */}
-                      <div>
-                        <p className="font-ui text-xs font-semibold text-brand-neutrals-60 uppercase tracking-wider mb-2">Progress</p>
-                        <div className="flex items-center gap-1.5">
-                          {["applied", "under_review", "shortlisted"].map((step, i) => {
-                            const stages = ["applied", "under_review", "shortlisted"];
-                            const currentIdx = stages.indexOf(app.status);
-                            const stepIdx = i;
-                            const done = currentIdx >= stepIdx && app.status !== "rejected";
-                            return (
-                              <div key={step} className="flex items-center gap-1.5">
-                                <div className={`size-2.5 rounded-full border-2 ${done ? "bg-brand-primary border-brand-primary" : "border-brand-neutrals-20 bg-white"}`} />
-                                <span className="font-ui text-[10px] text-brand-neutrals-60 hidden sm:inline capitalize">{step.replace("_", " ")}</span>
-                                {i < 2 && <div className={`w-6 h-0.5 ${done && currentIdx > stepIdx ? "bg-brand-primary" : "bg-brand-neutrals-20"}`} />}
-                              </div>
-                            );
-                          })}
+
+                      {/* Right Side: Admin Status Toggle */}
+                      {jobId ? (
+                        <div className="space-y-4">
+                          <p className="font-ui text-[11px] font-bold text-brand-neutrals-60 uppercase tracking-widest">Update Recruitment Status</p>
+                          <div className="flex flex-col gap-2">
+                            {Object.entries(STATUS_CONFIG).map(([key, config]) => (
+                              <button
+                                key={key}
+                                disabled={updateStatusMutation.isPending || app.status === key}
+                                onClick={() => updateStatusMutation.mutate({ id: app.id, status: key })}
+                                className={`flex items-center justify-between px-4 py-2 text-xs font-semibold border transition-all ${app.status === key
+                                  ? "bg-white border-brand-neutrals-100 text-brand-neutrals-100 cursor-default shadow-sm"
+                                  : "bg-white border-brand-neutrals-20 text-brand-neutrals-40 hover:border-brand-primary hover:text-brand-primary"
+                                  }`}
+                              >
+                                <span>{config.label}</span>
+                                {app.status === key && <CheckCircle2 className="size-4 text-brand-green" />}
+                              </button>
+                            ))}
+                          </div>
+                          {updateStatusMutation.isPending && <p className="text-[10px] text-brand-primary animate-pulse text-center">Saving changes...</p>}
                         </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-4 mt-3 font-ui text-xs text-brand-neutrals-60">
-                      <span className="flex items-center gap-1"><Calendar className="size-3.5" />Applied: {app.appliedAt}</span>
-                      <span className="flex items-center gap-1"><Calendar className="size-3.5" />Deadline: {app.deadline}</span>
+                      ) : (
+                        <div className="space-y-4">
+                          <p className="font-ui text-[11px] font-bold text-brand-neutrals-60 uppercase tracking-widest">Application Progress</p>
+                          <div className="p-4 border-l-4 border-brand-primary bg-brand-primary/5">
+                            <p className="font-ui text-sm font-semibold text-brand-neutrals-100">{s.label}</p>
+                            <p className="font-ui text-xs text-brand-neutrals-60 mt-1">{s.desc}</p>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}

@@ -5,18 +5,40 @@ import { useForm } from "@/lib/useForm"
 import { z } from "zod"
 import Link from "next/link"
 import Image from "next/image"
+import { useMutation } from "@tanstack/react-query"
+import { useRouter } from "next/navigation"
+import { authApi } from "@/lib/api/features/auth"
+import { toast } from "sonner"
+import { Loader2 } from "lucide-react"
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
   password: z.string().min(6, { message: "Password must be at least 6 characters" }),
 })
 
+// Extract the type from the schema
+type LoginFormValues = z.infer<typeof loginSchema>;
+
 export default function LoginPage() {
-  const form = useForm(loginSchema)
-  // Handle  submit
-  const onSubmit = (data: any) => {
-    // Implement login logic here, e.g., call an API endpoint
-    console.log("Login data:", data)
+  const router = useRouter();
+
+  const form = useForm<LoginFormValues>(loginSchema);
+
+  const loginMutation = useMutation({
+    mutationFn: authApi.login,
+    onSuccess: (response) => {
+      toast.success(response.message || "Login successful!");
+      router.push("/dashboard");
+      router.refresh();
+    },
+    onError: (error: any) => {
+      const errorMessage = error?.response?.data?.message || "Unable to login. Please try again.";
+      toast.error(errorMessage);
+    },
+  });
+
+  const onSubmit = async (data: LoginFormValues) => {
+    loginMutation.mutate(data);
   }
 
   return (
@@ -31,39 +53,52 @@ export default function LoginPage() {
         <h1 className="font-heading text-3xl font-bold text-brand-neutrals-100">Login</h1>
 
         <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
-          <label className="grid gap-2">
-            <span className="text-sm text-brand-neutrals-80">Email</span>
+          <div className="grid gap-2">
+            <span className="text-sm text-brand-neutrals-80 font-medium">Email</span>
             <Input
               type="email"
               {...form.register("email")}
               placeholder="you@example.com"
+              disabled={loginMutation.isPending}
               className={form.formState.errors.email ? "border-destructive" : ""}
             />
-            {form.formState.errors.email && typeof form.formState.errors.email.message === "string" && (
+            {form.formState.errors.email?.message && (
               <span className="text-xs text-destructive">{form.formState.errors.email.message}</span>
             )}
-          </label>
+          </div>
 
-          <label className="grid gap-2">
-            <span className="text-sm text-brand-neutrals-80">Password</span>
+          <div className="grid gap-2">
+            <span className="text-sm text-brand-neutrals-80 font-medium">Password</span>
             <Input
               type="password"
               {...form.register("password")}
               placeholder="Your password"
+              disabled={loginMutation.isPending}
               className={form.formState.errors.password ? "border-destructive" : ""}
             />
-            {form.formState.errors.password && typeof form.formState.errors.password.message === "string" && (
+            {form.formState.errors.password?.message && (
               <span className="text-xs text-destructive">{form.formState.errors.password.message}</span>
             )}
-          </label>
+          </div>
 
-          <Button type="submit" className="w-full">
-            Continue
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={loginMutation.isPending}
+          >
+            {loginMutation.isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Signing in...
+              </>
+            ) : (
+              "Continue"
+            )}
           </Button>
         </form>
 
         <p className="text-center text-brand-neutrals-80">
-          No account? <Link href="/register" className="text-primary">Create one</Link>
+          No account? <Link href="/register" className="text-primary font-semibold hover:underline">Create one</Link>
         </p>
       </section>
     </main>

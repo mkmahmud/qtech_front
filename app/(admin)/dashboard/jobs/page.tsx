@@ -6,57 +6,71 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Plus, Search, Edit2, Trash2, Eye, Users,
-  MapPin, MoreVertical, ChevronDown
+  MapPin, ChevronDown, Loader2
 } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { format } from "date-fns";
+import { jobsApi } from "@/lib/api/features/jobs";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const JOBS = [
-  {
-    id: "1", title: "Senior Product Designer", company: "Stripe",
-    location: "Remote · US", category: "Design", type: "Full Time",
-    salary: "$120k–$160k", status: "active",
-    applicants: 48, shortlisted: 5, posted: "Mar 14, 2025",
-  },
-  {
-    id: "2", title: "Frontend Engineer (React)", company: "Stripe",
-    location: "San Francisco, CA", category: "Engineering", type: "Full Time",
-    salary: "$140k–$190k", status: "active",
-    applicants: 72, shortlisted: 8, posted: "Mar 7, 2025",
-  },
-  {
-    id: "3", title: "Growth Marketing Manager", company: "Stripe",
-    location: "New York, NY", category: "Marketing", type: "Full Time",
-    salary: "$90k–$130k", status: "active",
-    applicants: 35, shortlisted: 3, posted: "Feb 28, 2025",
-  },
-  {
-    id: "4", title: "Backend Engineer – Python", company: "Stripe",
-    location: "Remote · Worldwide", category: "Engineering", type: "Full Time",
-    salary: "$160k–$220k", status: "closed",
-    applicants: 91, shortlisted: 12, posted: "Feb 10, 2025",
-  },
-  {
-    id: "5", title: "Customer Success Lead", company: "Stripe",
-    location: "Dublin, Ireland", category: "Customer Support", type: "Full Time",
-    salary: "$70k–$95k", status: "draft",
-    applicants: 0, shortlisted: 0, posted: "Mar 18, 2025",
-  },
-];
-
-const CATEGORIES = ["All", "Engineering", "Design", "Marketing", "Customer Support"];
+const CATEGORIES = ["All", "engineering", "design", "marketing", "customer_support", "other"];
 const STATUSES = ["All", "Active", "Closed", "Draft"];
 
 export default function AdminJobsPage() {
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
-  const [openMenu, setOpenMenu] = useState<string | null>(null);
+
+  // Get All data
+  const { data: response, isLoading, isError } = useQuery({
+    queryKey: ["jobs", "admin"],
+    queryFn: () => jobsApi.getMyJobs(),
+  });
+
+  const JOBS = response?.data || [];
+
+  // Delete
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => jobsApi.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["jobs"] });
+      toast.success("Job deleted successfully");
+    },
+    onError: () => toast.error("Failed to delete job"),
+  });
+
+  const handleDelete = (id: number) => {
+    if (confirm("Are you sure you want to delete this job? This action cannot be undone.")) {
+      deleteMutation.mutate(id);
+    }
+  };
 
   const filtered = JOBS.filter((j) => {
     const matchSearch = !search || j.title.toLowerCase().includes(search.toLowerCase());
     const matchCat = category === "All" || j.category === category;
-    const matchStatus = statusFilter === "All" || j.status === statusFilter.toLowerCase();
+    const matchStatus = statusFilter === "All" || (j as any).status === statusFilter.toLowerCase();
     return matchSearch && matchCat && matchStatus;
   });
+
+  if (isLoading) {
+    return (
+      <div className="h-[60vh] flex flex-col items-center justify-center gap-2">
+        <Loader2 className="size-8 animate-spin text-brand-primary" />
+        <p className="text-sm text-brand-neutrals-60">Loading your listings...</p>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="h-[60vh] flex items-center justify-center">
+        <p className="text-destructive">Failed to load jobs. Please try refreshing.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -76,9 +90,9 @@ export default function AdminJobsPage() {
       {/* Stats Row */}
       <div className="grid grid-cols-3 gap-4">
         {[
-          { label: "Active", value: JOBS.filter((j) => j.status === "active").length, color: "text-brand-green", bg: "bg-brand-green/10" },
-          { label: "Total Applicants", value: JOBS.reduce((s, j) => s + j.applicants, 0), color: "text-brand-primary", bg: "bg-brand-primary/10" },
-          { label: "Shortlisted", value: JOBS.reduce((s, j) => s + j.shortlisted, 0), color: "text-brand-yellow", bg: "bg-brand-yellow/10" },
+          { label: "Active", value: JOBS.length, color: "text-brand-green", bg: "bg-brand-green/10" },
+          { label: "Total Applicants", value: JOBS.reduce((s, j) => s + (j.applications_count || 0), 0), color: "text-brand-primary", bg: "bg-brand-primary/10" },
+          { label: "Shortlisted", value: 0, color: "text-brand-yellow", bg: "bg-brand-yellow/10" },
         ].map(({ label, value, color, bg }) => (
           <div key={label} className={`${bg} border border-transparent p-4`}>
             <p className={`font-heading font-bold text-2xl ${color}`}>{value}</p>
@@ -91,33 +105,41 @@ export default function AdminJobsPage() {
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-brand-neutrals-40" />
-          <input
+          <Input
             placeholder="Search job titles…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full h-10 pl-10 pr-4 border border-brand-neutrals-20 bg-white font-ui text-sm outline-none focus:border-brand-primary transition-colors"
+            className="w-full h-10 pl-10 pr-4 border-b border-brand-neutrals-20  "
           />
         </div>
         <div className="flex gap-2 flex-wrap">
           <div className="relative">
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="appearance-none h-10 pl-3 pr-8 border border-brand-neutrals-20 bg-white font-ui text-sm text-brand-neutrals-80 outline-none focus:border-brand-primary"
+
+            <Select
             >
-              {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
-            </select>
-            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 size-3.5 text-brand-neutrals-40 pointer-events-none" />
+              <SelectTrigger className="h-12 border-none outline-none text-sm text-gray-600 w-full">
+                <SelectValue placeholder="Category" />
+              </SelectTrigger>
+              <SelectContent onChange={(e: any) => setCategory(e.target.value)}>
+                {CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c.replace("_", " ")}</SelectItem>)}
+
+              </SelectContent>
+            </Select>
           </div>
+
           <div className="relative">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="appearance-none h-10 pl-3 pr-8 border border-brand-neutrals-20 bg-white font-ui text-sm text-brand-neutrals-80 outline-none focus:border-brand-primary"
+
+            <Select
             >
-              {STATUSES.map((s) => <option key={s}>{s}</option>)}
-            </select>
-            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 size-3.5 text-brand-neutrals-40 pointer-events-none" />
+              <SelectTrigger className="h-12 border-none outline-none text-sm text-gray-600 w-full">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent onChange={(e: any) => setStatusFilter(e.target.value)}>
+                {STATUSES.map((c) => <SelectItem key={c} value={c}>{c.replace("_", " ")}</SelectItem>)}
+
+              </SelectContent>
+            </Select>
+
           </div>
         </div>
       </div>
@@ -142,28 +164,31 @@ export default function AdminJobsPage() {
                     <p className="font-ui text-sm font-semibold text-brand-neutrals-100">{job.title}</p>
                     <div className="flex items-center gap-3 mt-0.5 text-xs font-ui text-brand-neutrals-60">
                       <span className="flex items-center gap-1"><MapPin className="size-3" />{job.location}</span>
-                      <span>{job.salary}</span>
+                      <span className="capitalize">{job.company}</span>
                     </div>
-                    <p className="font-ui text-xs text-brand-neutrals-40 mt-0.5">Posted {job.posted}</p>
+                    <p className="font-ui text-xs text-brand-neutrals-40 mt-0.5">
+                      Posted {format(new Date(job.created_at), "MMM d, yyyy")}
+                    </p>
                   </td>
                   <td className="px-4 py-4">
-                    <span className="font-ui text-xs border border-brand-neutrals-20 px-2 py-1 text-brand-neutrals-60">{job.category}</span>
+                    <Badge variant="green" className="capitalize">
+                      {job.category.replace("_", " ")}
+                    </Badge>
                   </td>
                   <td className="px-4 py-4">
                     <div className="flex items-center gap-1 font-ui text-sm font-semibold text-brand-neutrals-100">
                       <Users className="size-3.5 text-brand-neutrals-40" />
-                      {job.applicants}
+                      {job.applications_count}
                     </div>
-                    <p className="font-ui text-xs text-brand-green mt-0.5">{job.shortlisted} shortlisted</p>
                   </td>
                   <td className="px-4 py-4">
                     <Badge
                       variant={
-                        job.status === "active" ? "green" :
-                        job.status === "draft" ? "yellow" : "default"
+                        (job as any).status === "active" ? "green" :
+                          (job as any).status === "draft" ? "yellow" : "default"
                       }
                     >
-                      {job.status.charAt(0).toUpperCase() + job.status.slice(1)}
+                      {(job as any).status?.toUpperCase() || "ACTIVE"}
                     </Badge>
                   </td>
                   <td className="px-4 py-4">
@@ -178,7 +203,11 @@ export default function AdminJobsPage() {
                           <Edit2 className="size-3.5" />
                         </button>
                       </Link>
-                      <button className="size-8 border border-brand-neutrals-20 grid place-items-center hover:border-brand-red hover:text-brand-red transition-colors text-brand-neutrals-60">
+                      <button
+                        onClick={() => handleDelete(job.id)}
+                        disabled={deleteMutation.isPending}
+                        className="size-8 border border-brand-neutrals-20 grid place-items-center hover:border-brand-red hover:text-brand-red transition-colors text-brand-neutrals-60 disabled:opacity-50"
+                      >
                         <Trash2 className="size-3.5" />
                       </button>
                     </div>

@@ -1,10 +1,11 @@
- 
+"use client";
+
+import { useAuth } from "@/lib/hooks/use-auth";
 import {
-    Bell, ChevronDown, Menu, X
+    Bell, ChevronDown, Loader2, Menu, X
 } from "lucide-react";
 import Link from 'next/link';
 
-const MOCK_USER = { name: "Sarah Johnson", email: "sarah@example.com", role: "user" as "user" | "admin", avatar: "SJ" };
 
 export default function Header({
     sidebarOpen,
@@ -14,7 +15,10 @@ export default function Header({
     setSidebarOpen: (value: boolean) => void;
 }) {
 
-    const user = MOCK_USER;
+
+    const { user, logout, isLoading } = useAuth();
+
+    if (isLoading) return <Loader2 className="animate-spin" />;
 
     return (
         <header className="bg-white border-b border-brand-neutrals-20 sticky top-0 z-40 h-16 flex items-center">
