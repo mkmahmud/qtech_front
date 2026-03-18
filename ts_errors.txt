@@ -1,0 +1,70 @@
+app/(auth)/login/page.tsx(43,47): error TS2345: Argument of type '(data: { email: string; password: string; }) => void' is not assignable to parameter of type 'SubmitHandler<TFieldValues>'.
+  Types of parameters 'data' and 'data' are incompatible.
+    Type 'TFieldValues' is not assignable to type '{ email: string; password: string; }'.
+      Type 'FieldValues' is missing the following properties from type '{ email: string; password: string; }': email, password
+app/(auth)/login/page.tsx(45,17): error TS2322: Type 'Control<{ email: string; password: string; }, any, TFieldValues>' is not assignable to type 'Control<{ email: string; password: string; }, any, { email: string; password: string; }>'.
+  The types of '_options.resolver' are incompatible between these types.
+    Type 'Resolver<{ email: string; password: string; }, any, TFieldValues> | undefined' is not assignable to type 'Resolver<{ email: string; password: string; }, any, { email: string; password: string; }> | undefined'.
+      Type 'Resolver<{ email: string; password: string; }, any, TFieldValues>' is not assignable to type 'Resolver<{ email: string; password: string; }, any, { email: string; password: string; }>'.
+        Type 'ResolverResult<{ email: string; password: string; }, TFieldValues> | Promise<ResolverResult<{ email: string; password: string; }, TFieldValues>>' is not assignable to type 'ResolverResult<{ email: string; password: string; }, { email: string; password: string; }> | Promise<ResolverResult<{ email: string; password: string; }, { email: string; password: string; }>>'.
+          Type 'ResolverSuccess<TFieldValues>' is not assignable to type 'ResolverResult<{ email: string; password: string; }, { email: string; password: string; }> | Promise<ResolverResult<{ email: string; password: string; }, { email: string; password: string; }>>'.
+            Type 'ResolverSuccess<TFieldValues>' is not assignable to type 'ResolverSuccess<{ email: string; password: string; }>'.
+              Type 'TFieldValues' is not assignable to type '{ email: string; password: string; }'.
+                Type 'FieldValues' is missing the following properties from type '{ email: string; password: string; }': email, password
+app/(auth)/login/page.tsx(64,17): error TS2322: Type 'Control<{ email: string; password: string; }, any, TFieldValues>' is not assignable to type 'Control<{ email: string; password: string; }, any, { email: string; password: string; }>'.
+  The types of '_options.resolver' are incompatible between these types.
+    Type 'Resolver<{ email: string; password: string; }, any, TFieldValues> | undefined' is not assignable to type 'Resolver<{ email: string; password: string; }, any, { email: string; password: string; }> | undefined'.
+      Type 'Resolver<{ email: string; password: string; }, any, TFieldValues>' is not assignable to type 'Resolver<{ email: string; password: string; }, any, { email: string; password: string; }>'.
+        Type 'ResolverResult<{ email: string; password: string; }, TFieldValues> | Promise<ResolverResult<{ email: string; password: string; }, TFieldValues>>' is not assignable to type 'ResolverResult<{ email: string; password: string; }, { email: string; password: string; }> | Promise<ResolverResult<{ email: string; password: string; }, { email: string; password: string; }>>'.
+          Type 'ResolverSuccess<TFieldValues>' is not assignable to type 'ResolverResult<{ email: string; password: string; }, { email: string; password: string; }> | Promise<ResolverResult<{ email: string; password: string; }, { email: string; password: string; }>>'.
+            Type 'ResolverSuccess<TFieldValues>' is not assignable to type 'ResolverSuccess<{ email: string; password: string; }>'.
+              Type 'TFieldValues' is not assignable to type '{ email: string; password: string; }'.
+                Type 'FieldValues' is missing the following properties from type '{ email: string; password: string; }': email, password
+app/(auth)/register/page.tsx(44,47): error TS2345: Argument of type '(data: { name: string; email: string; password: string; }) => void' is not assignable to parameter of type 'SubmitHandler<TFieldValues>'.
+  Types of parameters 'data' and 'data' are incompatible.
+    Type 'TFieldValues' is not assignable to type '{ name: string; email: string; password: string; }'.
+      Type 'FieldValues' is missing the following properties from type '{ name: string; email: string; password: string; }': name, email, password
+app/(auth)/register/page.tsx(46,17): error TS2322: Type 'Control<{ name: string; email: string; password: string; }, any, TFieldValues>' is not assignable to type 'Control<{ name: string; email: string; password: string; }, any, { name: string; email: string; password: string; }>'.
+  The types of '_options.resolver' are incompatible between these types.
+    Type 'Resolver<{ name: string; email: string; password: string; }, any, TFieldValues> | undefined' is not assignable to type 'Resolver<{ name: string; email: string; password: string; }, any, { name: string; email: string; password: string; }> | undefined'.
+      Type 'Resolver<{ name: string; email: string; password: string; }, any, TFieldValues>' is not assignable to type 'Resolver<{ name: string; email: string; password: string; }, any, { name: string; email: string; password: string; }>'.
+        Type 'ResolverResult<{ name: string; email: string; password: string; }, TFieldValues> | Promise<ResolverResult<{ name: string; email: string; password: string; }, TFieldValues>>' is not assignable to type 'ResolverResult<{ name: string; email: string; password: string; }, { name: string; email: string; password: string; }> | Promise<ResolverResult<{ name: string; email: string; password: string; }, { ...; }>>'.
+          Type 'ResolverSuccess<TFieldValues>' is not assignable to type 'ResolverResult<{ name: string; email: string; password: string; }, { name: string; email: string; password: string; }> | Promise<ResolverResult<{ name: string; email: string; password: string; }, { ...; }>>'.
+            Type 'ResolverSuccess<TFieldValues>' is not assignable to type 'ResolverSuccess<{ name: string; email: string; password: string; }>'.
+              Type 'TFieldValues' is not assignable to type '{ name: string; email: string; password: string; }'.
+                Type 'FieldValues' is missing the following properties from type '{ name: string; email: string; password: string; }': name, email, password
+app/(auth)/register/page.tsx(65,17): error TS2322: Type 'Control<{ name: string; email: string; password: string; }, any, TFieldValues>' is not assignable to type 'Control<{ name: string; email: string; password: string; }, any, { name: string; email: string; password: string; }>'.
+  The types of '_options.resolver' are incompatible between these types.
+    Type 'Resolver<{ name: string; email: string; password: string; }, any, TFieldValues> | undefined' is not assignable to type 'Resolver<{ name: string; email: string; password: string; }, any, { name: string; email: string; password: string; }> | undefined'.
+      Type 'Resolver<{ name: string; email: string; password: string; }, any, TFieldValues>' is not assignable to type 'Resolver<{ name: string; email: string; password: string; }, any, { name: string; email: string; password: string; }>'.
+        Type 'ResolverResult<{ name: string; email: string; password: string; }, TFieldValues> | Promise<ResolverResult<{ name: string; email: string; password: string; }, TFieldValues>>' is not assignable to type 'ResolverResult<{ name: string; email: string; password: string; }, { name: string; email: string; password: string; }> | Promise<ResolverResult<{ name: string; email: string; password: string; }, { ...; }>>'.
+          Type 'ResolverSuccess<TFieldValues>' is not assignable to type 'ResolverResult<{ name: string; email: string; password: string; }, { name: string; email: string; password: string; }> | Promise<ResolverResult<{ name: string; email: string; password: string; }, { ...; }>>'.
+            Type 'ResolverSuccess<TFieldValues>' is not assignable to type 'ResolverSuccess<{ name: string; email: string; password: string; }>'.
+              Type 'TFieldValues' is not assignable to type '{ name: string; email: string; password: string; }'.
+                Type 'FieldValues' is missing the following properties from type '{ name: string; email: string; password: string; }': name, email, password
+app/(auth)/register/page.tsx(84,17): error TS2322: Type 'Control<{ name: string; email: string; password: string; }, any, TFieldValues>' is not assignable to type 'Control<{ name: string; email: string; password: string; }, any, { name: string; email: string; password: string; }>'.
+  The types of '_options.resolver' are incompatible between these types.
+    Type 'Resolver<{ name: string; email: string; password: string; }, any, TFieldValues> | undefined' is not assignable to type 'Resolver<{ name: string; email: string; password: string; }, any, { name: string; email: string; password: string; }> | undefined'.
+      Type 'Resolver<{ name: string; email: string; password: string; }, any, TFieldValues>' is not assignable to type 'Resolver<{ name: string; email: string; password: string; }, any, { name: string; email: string; password: string; }>'.
+        Type 'ResolverResult<{ name: string; email: string; password: string; }, TFieldValues> | Promise<ResolverResult<{ name: string; email: string; password: string; }, TFieldValues>>' is not assignable to type 'ResolverResult<{ name: string; email: string; password: string; }, { name: string; email: string; password: string; }> | Promise<ResolverResult<{ name: string; email: string; password: string; }, { ...; }>>'.
+          Type 'ResolverSuccess<TFieldValues>' is not assignable to type 'ResolverResult<{ name: string; email: string; password: string; }, { name: string; email: string; password: string; }> | Promise<ResolverResult<{ name: string; email: string; password: string; }, { ...; }>>'.
+            Type 'ResolverSuccess<TFieldValues>' is not assignable to type 'ResolverSuccess<{ name: string; email: string; password: string; }>'.
+              Type 'TFieldValues' is not assignable to type '{ name: string; email: string; password: string; }'.
+                Type 'FieldValues' is missing the following properties from type '{ name: string; email: string; password: string; }': name, email, password
+lib/useForm.ts(7,9): error TS2322: Type 'Resolver<FieldValues, any, T>' is not assignable to type 'Resolver<T, any, T>'.
+  Types of parameters 'options' and 'options' are incompatible.
+    Type 'ResolverOptions<T>' is not assignable to type 'ResolverOptions<FieldValues>'.
+      Type 'FieldValues' is not assignable to type 'T'.
+        'FieldValues' is assignable to the constraint of type 'T', but 'T' could be instantiated with a different subtype of constraint 'Record<string, any>'.
+lib/useForm.ts(7,31): error TS2769: No overload matches this call.
+  Overload 1 of 4, '(schema: Zod3Type<T, FieldValues>, schemaOptions?: ParseParams | undefined, resolverOptions?: NonRawResolverOptions | undefined): Resolver<...>', gave the following error.
+    Argument of type 'ZodType<T, unknown, $ZodTypeInternals<T, unknown>>' is not assignable to parameter of type 'Zod3Type<T, FieldValues>'.
+      Types of property '_input' are incompatible.
+        Type 'unknown' is not assignable to type 'FieldValues'.
+  Overload 2 of 4, '(schema: $ZodType<unknown, FieldValues, $ZodTypeInternals<unknown, FieldValues>>, schemaOptions?: ParseContext<$ZodIssue> | undefined, resolverOptions?: NonRawResolverOptions | undefined): Resolver<...>', gave the following error.
+    Argument of type 'ZodType<T, unknown, $ZodTypeInternals<T, unknown>>' is not assignable to parameter of type '$ZodType<unknown, FieldValues, $ZodTypeInternals<unknown, FieldValues>>'.
+      Types of property '_zod' are incompatible.
+        Type '$ZodTypeInternals<T, unknown>' is not assignable to type '$ZodTypeInternals<unknown, FieldValues>'.
+          Type 'unknown' is not assignable to type 'FieldValues'.
+lib/useForm.ts(8,9): error TS2322: Type 'Partial<T> | undefined' is not assignable to type 'AsyncDefaultValues<T> | DefaultValues<T> | undefined'.
+  Type 'Partial<T>' is not assignable to type 'AsyncDefaultValues<T> | DefaultValues<T> | undefined'.
