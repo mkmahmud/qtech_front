@@ -203,7 +203,7 @@ export default function DashboardPage() {
                       </td>
                       <td className="px-4 py-4">
                         <Link href={`/dashboard/applications?job=${job.id}`}>
-                          <Button variant="outline"   className="gap-1.5">
+                          <Button variant="outline" className="gap-1.5">
                             <Eye className="size-3.5" /> View
                           </Button>
                         </Link>
@@ -241,21 +241,7 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="bg-white border border-brand-neutrals-20 p-5">
-              <h3 className="font-heading font-bold text-sm text-brand-neutrals-100 mb-3">Quick Actions</h3>
-              <div className="space-y-2">
-                <Link href="/dashboard/jobs/create">
-                  <Button className="w-full gap-2 justify-start" size="sm">
-                    <Plus className="size-4" /> Post New Job
-                  </Button>
-                </Link>
-                <Link href="/dashboard/applications">
-                  <Button variant="outline" className="w-full gap-2 justify-start" size="sm">
-                    <Users className="size-4" /> Review Applications
-                  </Button>
-                </Link>
-              </div>
-            </div>
+
           </div>
         </div>
       )}

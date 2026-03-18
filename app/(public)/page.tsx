@@ -1,3 +1,4 @@
+"use client";
 import Image from "next/image"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -7,104 +8,209 @@ import CategoryCard from "@/components/cards/categoryCard"
 import Link from "next/link"
 import JobCard from "@/components/cards/jobCard"
 import LatestJobCard from "@/components/cards/latestJobCard"
+import { useRouter } from "next/navigation"
+import { useState } from "react"
 
 export default function PublicHomePage() {
+
+
+  const router = useRouter();
+
+  const [search, setSearch] = useState("");
+  const [location, setLocation] = useState("");
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const params = new URLSearchParams();
+    if (search) params.set("search", search);
+    if (location) params.set("location", location);
+
+    router.push(`/jobs?${params.toString()}`);
+  };
+
   return (
     <section>
       {/* Hero Section */}
       <section className="relative bg-brand-light-gray overflow-hidden -mt-20">
 
+
+
         {/* RIGHT SIDE BG PATTERN */}
+
         <div className="absolute inset-y-0 right-0 w-1/2">
+
           <Image
+
             src="/bg-pattern.svg"
+
             alt="pattern"
+
             fill
+
             className="object-cover  "
+
           />
+
         </div>
 
+
+
         {/* CONTAINER */}
+
         <div className="relative mx-auto   px-4 sm:px-6 py-20 md:py-40 flex">
 
+
+
           {/* LEFT CONTENT */}
+
           <div className="w-full md:w-1/2 z-10">
+
             <h1 className="font-heading text-[48px]  md:text-[72px]       font-bold text-brand-neutrals-100  leading-[1.1] mt-10">
+
               Discover <br />
+
               more than
+
               <p className="block text-brand-blue relative mt-2">
+
                 5000+ Jobs
+
                 <Image
+
                   src="/underline.svg"
+
                   alt="underline"
+
                   width={350}
+
                   height={18}
+
                   className="absolute left-0 top-full mt-2"
+
                 />
+
               </p>
+
             </h1>
 
+
+
             <p className="mt-10 text-xl text-brand-neutrals-80 max-w-xl">
+
               Great platform for the job seeker that searching for new career heights and passionate about startups.
+
             </p>
 
+
+
             <div className="mt-10 relative md:w-[900px] md:max-w-none">
-              <form className="flex flex-col md:flex-row items-stretch md:items-center justify-between bg-white p-3 gap-3 z-10">
+
+              <form onSubmit={handleSearch} className="flex flex-col md:flex-row items-stretch md:items-center justify-between bg-white p-3 gap-3 z-10">
+
                 <div className="flex items-center w-full gap-2">
+
+
 
                   <Search className="text-brand-neutrals-40" />
 
+
+
                   <Input
+
                     placeholder="Job title or keyword"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
                     className="h-12 border-b border-brand-neutrals-20 focus-visible:ring-0 flex-1"
+
                   />
+
                 </div>
+
+
 
                 <div className="flex items-center w-full gap-2">
 
+
+
                   <LocateIcon className="text-brand-neutrals-40" />
 
+
+
                   <div className="border-b border-brand-neutrals-20 w-full">
-                    <Select>
-                      <SelectTrigger className="h-12 border-none outline-none text-sm text-gray-600 w-full">
+
+                    <Select onValueChange={(val) => setLocation(val as string)}>
+                      <SelectTrigger className="h-12 border-none outline-none text-sm text-gray-600 w-full focus:ring-0">
                         <SelectValue placeholder="Location" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="florence">Florence, Italy</SelectItem>
-                        <SelectItem value="london">London, UK</SelectItem>
-                        <SelectItem value="newyork">New York, USA</SelectItem>
+                        <SelectItem value="remote">Remote</SelectItem>
+                        <SelectItem value="dhaka">Dhaka</SelectItem>
+                        <SelectItem value="london">New York</SelectItem>
+                        <SelectItem value="newyork">Florida</SelectItem>
                       </SelectContent>
                     </Select>
+
                   </div>
+
                 </div>
 
-                <Button className="h-12 px-6 whitespace-nowrap w-full md:w-auto">
+
+
+                <Button type="submit" className="h-12 px-6 whitespace-nowrap w-full md:w-auto">
+
                   Search my job
+
                 </Button>
+
               </form>
+
             </div>
 
+
+
             <p className="mt-3 text-base text-brand-neutrals-40">
+
               Popular: <span className="font-semibold">UI Designer, UX Researcher, Android, Admin</span>
+
             </p>
+
           </div>
 
+
+
           <div className="hidden md:block w-1/2 relative" />
+
         </div>
+
+
 
         <div className="hidden md:block absolute bottom-0 right-30  ">
+
           <Image
+
             src="/peron.png"
+
             alt="person"
+
             width={420}
+
             height={520}
+
             className="object-contain"
+
           />
+
         </div>
 
-        <div className="hidden md:block absolute bottom-0 right-0 w-[30%] h-[180px] bg-white z-0 
+
+
+        <div className="hidden md:block absolute bottom-0 right-0 w-[30%] h-[180px] bg-white z-0
+
   [clip-path:polygon(0_100%,100%_0,100%_100%)]">
+
         </div>
+
       </section>
 
       {/*  top companies*/}
@@ -156,7 +262,7 @@ export default function PublicHomePage() {
         <div className="flex items-center justify-between">
           <h1 className="text-4xl md:text-[48px] font-bold font-heading">Explore by <span className="text-brand-blue">category</span></h1>
           <Button variant="ghost" className="hidden md:block  ">
-            <Link href="/jobs/1" className="flex items-center gap-2">
+            <Link href="/jobs" className="flex items-center gap-2">
               <span> Show all jobs</span> <ArrowRight />
             </Link>
           </Button>
@@ -173,7 +279,7 @@ export default function PublicHomePage() {
           <CategoryCard />
         </div>
         <Button variant="ghost" className="md:hidden mt-4  ">
-          <Link href="/jobs/1" className="flex items-center gap-2">
+          <Link href="/jobs" className="flex items-center gap-2">
             <span> Show all jobs</span> <ArrowRight />
           </Link>
         </Button>
@@ -224,7 +330,7 @@ export default function PublicHomePage() {
         <div className="flex items-center justify-between">
           <h1 className="text-4xl md:text-[48px] font-bold font-heading">Featured<span className="text-brand-blue">jobs</span></h1>
           <Button variant="ghost" className="hidden md:block  ">
-            <Link href="/jobs/1" className="flex items-center gap-2">
+            <Link href="/jobs" className="flex items-center gap-2">
               <span> Show all jobs</span> <ArrowRight />
             </Link>
           </Button>
@@ -241,7 +347,7 @@ export default function PublicHomePage() {
           <JobCard />
         </div>
         <Button variant="ghost" className="md:hidden mt-4  ">
-          <Link href="/jobs/1" className="flex items-center gap-2">
+          <Link href="/jobs" className="flex items-center gap-2">
             <span> Show all jobs</span> <ArrowRight />
           </Link>
         </Button>
@@ -264,7 +370,7 @@ export default function PublicHomePage() {
           <div className="flex items-center justify-between">
             <h1 className="text-4xl md:text-[48px] font-bold font-heading">Featured<span className="text-brand-blue">jobs</span></h1>
             <Button variant="ghost" className="hidden md:block">
-              <Link href="/jobs/1" className="flex items-center gap-2">
+              <Link href="/jobs" className="flex items-center gap-2">
                 <span> Show all jobs</span> <ArrowRight />
               </Link>
             </Button>

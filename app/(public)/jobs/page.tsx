@@ -13,16 +13,25 @@ import JobpageCard from "@/components/cards/jobs/jobpageCard";
 import { PaginationControls } from "@/components/pagination/pagination-controls";
 import { formatDistanceToNow } from "date-fns";
 import { jobsApi } from "@/lib/api/features/jobs";
+import { useSearchParams } from "next/navigation";
 
 // Assuming you have a central API helper
 
 const CATEGORIES = ["All", "Engineering", "Design", "Marketing", "Sales", "Finance", "Operations", "Customer Support"];
 
 export default function JobsPage() {
+  const searchParams = useSearchParams();
+
+  const searchTerm = searchParams.get("search");
+  const locationTerm = searchParams.get("location");
+
   const [page, setPage] = useState(1);
-  const [search, setSearch] = useState("");
-  const [location, setLocation] = useState("");
+  const [search, setSearch] = useState(searchTerm || "");
+  const [location, setLocation] = useState(locationTerm || "");
   const [selectedCategory, setSelectedCategory] = useState("All");
+
+
+
 
   //   Fetch Data using React Query
   const { data: response, isLoading, isPlaceholderData } = useQuery({

@@ -14,6 +14,7 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { applicationApi } from "@/lib/api/features/application";
 import { Input } from "@/components/ui/input";
+import { ApplicationSkeleton } from "../components/skeletons/ApplicationSkeleton";
 
 //  Status  
 const STATUS_CONFIG: Record<string, { label: string; variant: "default" | "green" | "yellow" | "red"; desc: string }> = {
@@ -157,6 +158,12 @@ export default function MyApplicationsPage() {
         </div>
       ) : (
         <div className="space-y-3">
+
+          {
+            isLoading && [...Array(5)].map((_, i) => (
+              <ApplicationSkeleton key={i} />
+            ))
+          }
           {filtered.map((app) => {
             const s = STATUS_CONFIG[app.status] || STATUS_CONFIG.submitted;
             const isExpanded = expanded === app.id;
@@ -262,3 +269,5 @@ export default function MyApplicationsPage() {
     </div>
   );
 }
+
+
