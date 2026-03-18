@@ -17,6 +17,7 @@
   --font-mono: var(--font-geist-mono);
   --color-brand-primary: var(--brand-primary);
   --color-brand-gray: var(--brand-gray);
+  --color-brand-blue: var(--brand-blue);
   --color-brand-neutrals: var(--brand-neutrals);
   --color-brand-neutrals-20: var(--brand-neutrals-20);
   --color-brand-neutrals-40: var(--brand-neutrals-40);
@@ -90,6 +91,7 @@
   --brand-neutrals-60: #7C8493;
   --brand-neutrals-80: #515B6F;
   --brand-neutrals-100: #25324B;
+  --brand-blue: #26A4FF;
   --brand-black: #202430;
   --brand-yellow: #ffb836;
   --brand-green: #56cdad;

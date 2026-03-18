@@ -98,10 +98,10 @@ export default function Footer() {
                 className="h-12 w-full rounded-none border border-brand-neutrals-20 px-4 text-brand-neutrals-80 placeholder:text-brand-neutrals-40 sm:max-w-[240px]"
                 aria-label="Email address"
               />
-              <div className="w-full sm:w-auto">
+              <div className="md:w-full ">
                 <Button
                   type="submit"
-                  className="h-12 w-full rounded-none px-7 font-ui text-base font-semibold sm:w-auto"
+                  className="h-12   rounded-none px-7 font-ui text-base font-semibold  "
                 >
                   Subscribe
                 </Button>

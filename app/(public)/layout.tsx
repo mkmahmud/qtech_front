@@ -10,7 +10,7 @@ export default function PublicLayout({
         <div className="flex min-h-screen flex-col">
             <Nav />
 
-            <main className="mx-auto w-full   flex-1 px-4 py-8 sm:px-6">
+            <main className="mx-auto w-full  ">
                 {children}
             </main>
 

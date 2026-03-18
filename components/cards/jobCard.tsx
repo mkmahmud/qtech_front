@@ -3,7 +3,7 @@ import { Button } from '../ui/button'
 
 export default function JobCard() {
     return (
-        <article className="w-full max-w-[290px] border border-brand-neutrals-20 bg-white p-6">
+        <article className="w-full min-w-[290px] max-w-[290px] border border-brand-neutrals-20 bg-white p-6">
             <header className="mb-5 flex items-start justify-between gap-3">
                 <div className="grid size-12 place-items-center rounded-md border border-brand-neutrals-20 text-3xl font-heading font-bold leading-none text-foreground">
                     R

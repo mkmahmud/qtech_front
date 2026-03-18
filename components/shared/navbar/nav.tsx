@@ -18,8 +18,8 @@ export default function Nav() {
     const [isOpen, setIsOpen] = useState(false)
 
     return (
-        <header className=" ">
-            <div className="mx-auto flex w-full sticky top-0 z-50 items-center justify-between px-4 py-4 sm:px-6">
+        <header className="sticky top-0 z-50   ">
+            <div className="mx-auto flex w-full items-center justify-between px-4 py-4 sm:px-6">
                 <div className="flex space-x-4">
                     <Link href="/" className="flex items-center gap-2">
                         <Image src="/logo.png" alt="QuickHire logo" width={36} height={36}  priority />
